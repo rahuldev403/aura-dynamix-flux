@@ -1,25 +1,27 @@
-import { motion, useInView, useDragControls, PanInfo } from "framer-motion";
-import { useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
 
 const testimonials = [
   {
     id: 1,
-    quote: "Aura Dynamics transformed our operations. Their autonomous systems delivered a 40% increase in efficiency while reducing operational costs significantly.",
+    quote:
+      "Aura Dynamics transformed our operations. Their autonomous systems delivered a 40% increase in efficiency while reducing operational costs significantly.",
     author: "Dr. Sarah Chen",
     company: "Global Logistics Corp",
     role: "Chief Technology Officer",
   },
   {
     id: 2,
-    quote: "The precision and reliability of their drone fleet is unmatched. We've achieved mission success rates we never thought possible.",
+    quote:
+      "The precision and reliability of their drone fleet is unmatched. We've achieved mission success rates we never thought possible.",
     author: "Marcus Rodriguez",
     company: "Environmental Research Institute",
     role: "Head of Field Operations",
   },
   {
     id: 3,
-    quote: "Outstanding support and cutting-edge technology. Aura Dynamics is our trusted partner for all autonomous solutions.",
+    quote:
+      "Outstanding support and cutting-edge technology. Aura Dynamics is our trusted partner for all autonomous solutions.",
     author: "Jennifer Park",
     company: "Defense Systems Alliance",
     role: "Senior Program Director",
@@ -27,139 +29,139 @@ const testimonials = [
 ];
 
 export const TestimonialsSection = () => {
-  const [activeIndex, setActiveIndex] = useState(1);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [activeIndex, setActiveIndex] = useState(0);
+  const intervalRef = useRef(null);
+  const touchStartX = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
 
-  const next = () => {
-    setActiveIndex((prev) => (prev + 1) % testimonials.length);
-  };
+  const next = () =>
+    setActiveIndex((p) => (p + 1) % testimonials.length);
+  const prev = () =>
+    setActiveIndex((p) => (p - 1 + testimonials.length) % testimonials.length);
 
-  const prev = () => {
-    setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
-
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = 50;
-    if (info.offset.x > threshold) {
-      prev();
-    } else if (info.offset.x < -threshold) {
-      next();
+  // Auto-slide every 7s, pause when isPaused or when user interacts
+  useEffect(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (!isPaused) {
+      intervalRef.current = setInterval(next, 7000);
     }
+    return () => clearInterval(intervalRef.current);
+  }, [isPaused, activeIndex]);
+
+  // Handle touch swipe for mobile
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    setIsPaused(true);
+  };
+
+  const handleTouchEnd = (e) => {
+    const diff = e.changedTouches[0].clientX - touchStartX.current;
+    if (diff > 50) prev(); // Swipe right → previous
+    else if (diff < -50) next(); // Swipe left → next
+    // resume autoplay after short delay to avoid immediate slide
+    setTimeout(() => setIsPaused(false), 800);
   };
 
   return (
-    <section className="py-20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background" />
-      
+    <section className="py-16 md:py-24 relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background pointer-events-none" />
+
       <div className="container mx-auto px-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+        {/* Header */}
+        <div
+          className="text-center mb-12 md:mb-16 opacity-0 translate-y-5 animate-fade-in"
+          style={{ animationDelay: "0.2s", animationFillMode: "forwards" }}
         >
-          <h2 className="text-4xl md:text-5xl font-orbitron font-black mb-4 gradient-text">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-orbitron font-black mb-4 gradient-text">
             TRUSTED BY INDUSTRY LEADERS
           </h2>
-          <p className="text-foreground/60 max-w-2xl mx-auto font-inter text-lg">
+          <p className="text-foreground/60 max-w-2xl mx-auto font-inter text-base md:text-lg">
             Hear from our partners who are shaping the future with Aura Dynamics.
           </p>
-        </motion.div>
+        </div>
 
-        <div ref={ref} className="relative max-w-5xl mx-auto">
-          <div className="flex items-center justify-center gap-4">
-            {/* Navigation buttons */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={prev}
-              className="glass p-3 rounded-full hover:glass-strong transition-all duration-300 hidden md:block"
+        {/* Carousel */}
+        <div
+          className="relative max-w-4xl mx-auto flex justify-center items-center"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onFocus={() => setIsPaused(true)}
+          onBlur={() => setIsPaused(false)}
+        >
+          {/* Left Button */}
+          <button
+            onClick={prev}
+            className="absolute left-4 top-1/2 -translate-y-1/2 glass p-3 rounded-full hover:glass-strong transition-all duration-300 z-20 flex"
+            aria-label="Previous testimonial"
+          >
+            <ChevronLeft className="w-6 h-6 text-primary" />
+          </button>
+
+          {/* Carousel Track */}
+          <div className="overflow-hidden rounded-2xl">
+            <div
+              className="flex transition-transform duration-700 ease-in-out"
+              style={{ transform: `translateX(-${activeIndex * 100}%)` }}
             >
-              <ChevronLeft className="w-6 h-6 text-primary" />
-            </motion.button>
-
-            {/* Testimonials carousel */}
-            <div className="flex items-center gap-4 overflow-hidden w-full max-w-4xl">
-              {testimonials.map((testimonial, index) => {
-                const offset = index - activeIndex;
-                const isActive = index === activeIndex;
-                
-                return (
-                  <motion.div
-                    key={testimonial.id}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{
-                      opacity: isActive ? 1 : 0.3,
-                      scale: isActive ? 1 : 0.8,
-                      x: `${offset * 100}%`,
-                      zIndex: isActive ? 10 : 0,
-                    }}
-                    drag={isActive ? "x" : false}
-                    dragConstraints={{ left: 0, right: 0 }}
-                    dragElastic={0.2}
-                    onDragEnd={handleDragEnd}
-                    transition={{ 
-                      duration: 0.5,
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 30
-                    }}
-                    className={`absolute left-0 right-0 mx-auto glass-strong p-8 rounded-lg max-w-2xl ${
-                      !isActive && "pointer-events-none"
-                    }`}
-                  >
-                    <Quote className="w-12 h-12 text-primary/30 mb-4" />
-                    
-                    <p className="text-foreground/90 font-inter text-lg mb-6 leading-relaxed">
-                      "{testimonial.quote}"
-                    </p>
-
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                        <span className="font-orbitron font-bold text-primary">
-                          {testimonial.author.charAt(0)}
-                        </span>
-                      </div>
-                      
-                      <div>
-                        <p className="font-orbitron font-bold text-foreground">
-                          {testimonial.author}
-                        </p>
-                        <p className="text-sm text-foreground/60 font-inter">
-                          {testimonial.role}, {testimonial.company}
-                        </p>
-                      </div>
+              {testimonials.map((t) => (
+                <div
+                  key={t.id}
+                  className="min-w-full glass-strong p-8 sm:p-10 md:p-12 flex flex-col items-center justify-center text-center"
+                >
+                  <Quote className="w-10 h-10 sm:w-12 sm:h-12 text-primary/40 mb-6" />
+                  <p className="text-foreground/90 font-inter text-sm sm:text-base md:text-lg mb-8 leading-relaxed max-w-xl mx-auto">
+                    "{t.quote}"
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <span className="font-orbitron font-bold text-primary text-lg">
+                        {t.author.charAt(0)}
+                      </span>
                     </div>
-                  </motion.div>
-                );
-              })}
+                    <div className="text-center sm:text-left">
+                      <p className="font-orbitron font-bold text-foreground text-base md:text-lg">
+                        {t.author}
+                      </p>
+                      <p className="text-sm text-foreground/60 font-inter leading-snug">
+                        {t.role}, {t.company}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={next}
-              className="glass p-3 rounded-full hover:glass-strong transition-all duration-300 hidden md:block"
-            >
-              <ChevronRight className="w-6 h-6 text-primary" />
-            </motion.button>
           </div>
 
-          {/* Dots indicator */}
-          <div className="flex justify-center gap-2 mt-40 md:mt-8">
-            {testimonials.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setActiveIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === activeIndex ? "bg-primary w-8" : "bg-primary/30"
-                }`}
-              />
-            ))}
-          </div>
+          {/* Right Button */}
+          <button
+            onClick={next}
+            className="absolute right-4 top-1/2 -translate-y-1/2 glass p-3 rounded-full hover:glass-strong transition-all duration-300 z-20 flex"
+            aria-label="Next testimonial"
+          >
+            <ChevronRight className="w-6 h-6 text-primary" />
+          </button>
+        </div>
+
+        {/* Dots */}
+        <div className="flex justify-center gap-3 mt-10">
+          {testimonials.map((_, idx) => (
+            <button
+              key={idx}
+              aria-label={`Go to testimonial ${idx + 1}`}
+              onClick={() => setActiveIndex(idx)}
+              className={`transition-all duration-300 ${
+                idx === activeIndex
+                  ? "bg-primary w-6 sm:w-8 h-1.5 sm:h-2 rounded-full"
+                  : "bg-primary/30 w-2 h-2 rounded-full"
+              }`}
+            />
+          ))}
         </div>
       </div>
     </section>
   );
 };
+
