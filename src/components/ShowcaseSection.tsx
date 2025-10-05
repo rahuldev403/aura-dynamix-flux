@@ -42,7 +42,7 @@ const projects: Project[] = [
     videoSources: [
       { src: "/src/assets/2.mp4", type: "video/mp4" },
       // Fallback to first video if 2.mp4 doesn't exist
-      { src: "/src/assets/1.mp4", type: "video/mp4" }
+      { src: "/src/assets/1.mp4", type: "video/mp4" },
     ],
     description:
       "Automated surveillance system with AI-powered threat detection for urban environments.",
@@ -55,7 +55,7 @@ const projects: Project[] = [
     videoSources: [
       { src: "/src/assets/3.mp4", type: "video/mp4" },
       // Fallback to first video if 3.mp4 doesn't exist
-      { src: "/src/assets/1.mp4", type: "video/mp4" }
+      { src: "/src/assets/1.mp4", type: "video/mp4" },
     ],
     description:
       "Precision agriculture drone for crop monitoring, soil analysis, and targeted treatment application.",
@@ -69,7 +69,7 @@ const projects: Project[] = [
     videoSources: [
       { src: "/src/assets/4.mp4", type: "video/mp4" },
       // Fallback to first video if 4.mp4 doesn't exist
-      { src: "/src/assets/1.mp4", type: "video/mp4" }
+      { src: "/src/assets/1.mp4", type: "video/mp4" },
     ],
     description:
       "Submersible ROV designed for deep ocean exploration and environmental monitoring.",
@@ -82,7 +82,7 @@ export const ShowcaseSection = () => {
   const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [hasVideoError, setHasVideoError] = useState(false);
   const [showDebugInfo, setShowDebugInfo] = useState(false); // For development only
-  const [videoCache, setVideoCache] = useState<{[key: string]: boolean}>({}); // Cache to track verified video URLs
+  const [videoCache, setVideoCache] = useState<{ [key: string]: boolean }>({}); // Cache to track verified video URLs
   const videoRef = useRef<HTMLVideoElement>(null);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -93,47 +93,47 @@ export const ShowcaseSection = () => {
     if (videoCache[url] !== undefined) {
       return videoCache[url];
     }
-    
+
     try {
       const response = await fetch(url, { method: "HEAD" });
       const exists = response.ok;
-      
+
       // Cache the result
-      setVideoCache(prev => ({
+      setVideoCache((prev) => ({
         ...prev,
-        [url]: exists
+        [url]: exists,
       }));
-      
+
       return exists;
     } catch (error) {
       console.error(`Error checking video availability for ${url}:`, error);
       return false;
     }
   };
-  
+
   // Check if any of the video sources in the current project can be played
   const checkVideoPlayability = async (): Promise<boolean> => {
     if (!videoRef.current) return false;
-    
+
     // Check each source in order until we find one that works
     for (const source of activeProject.videoSources) {
       const exists = await checkVideoSourceExists(source.src);
       if (exists) return true;
     }
-    
+
     return false;
   };
-  
+
   // Preload videos for better UX when switching between projects
   const preloadProjectVideo = async (project: Project) => {
     // Only preload the first source of each project to save bandwidth
     if (project.videoSources.length > 0) {
       const firstSource = project.videoSources[0];
-      const link = document.createElement('link');
-      link.rel = 'preload';
+      const link = document.createElement("link");
+      link.rel = "preload";
       link.href = firstSource.src;
-      link.as = 'video';
-      
+      link.as = "video";
+
       // Only add if the video exists
       const exists = await checkVideoSourceExists(firstSource.src);
       if (exists) {
@@ -166,7 +166,7 @@ export const ShowcaseSection = () => {
         // Attempt to play after reload
         setTimeout(() => {
           if (videoRef.current) {
-            const playPromise = videoRef.current.play().catch(err => {
+            const playPromise = videoRef.current.play().catch((err) => {
               console.error("Error playing after reload:", err);
               setHasVideoError(true);
               setIsVideoLoading(false);
@@ -183,13 +183,13 @@ export const ShowcaseSection = () => {
 
       try {
         // Ensure video has sources before playing
-        if (videoRef.current.querySelectorAll('source').length === 0) {
+        if (videoRef.current.querySelectorAll("source").length === 0) {
           console.error("No video sources available");
           setHasVideoError(true);
           setIsVideoLoading(false);
           return;
         }
-        
+
         const playPromise = videoRef.current.play();
 
         if (playPromise !== undefined) {
@@ -198,12 +198,12 @@ export const ShowcaseSection = () => {
               setIsPlaying(true);
               setIsVideoLoading(false);
               console.log("Video is playing");
-              
+
               // Update cache to indicate this video works
               if (videoRef.current && videoRef.current.currentSrc) {
-                setVideoCache(prev => ({
+                setVideoCache((prev) => ({
                   ...prev,
-                  [videoRef.current!.currentSrc]: true
+                  [videoRef.current!.currentSrc]: true,
                 }));
               }
             })
@@ -212,21 +212,23 @@ export const ShowcaseSection = () => {
               setIsPlaying(false);
               setHasVideoError(true);
               setIsVideoLoading(false);
-              
+
               // Try next source if available
-              const sources = Array.from(videoRef.current?.querySelectorAll('source') || []);
-              const currentSrc = videoRef.current?.currentSrc;
-              
-              // Find the index of current source
-              const currentIndex = sources.findIndex(src => 
-                src.src === currentSrc || currentSrc.endsWith(src.src)
+              const sources = Array.from(
+                videoRef.current?.querySelectorAll("source") || []
               );
-              
+              const currentSrc = videoRef.current?.currentSrc;
+
+              // Find the index of current source
+              const currentIndex = sources.findIndex(
+                (src) => src.src === currentSrc || currentSrc.endsWith(src.src)
+              );
+
               // If we have more sources to try
               if (currentIndex < sources.length - 1) {
                 console.log("Trying next video source");
                 const nextSource = sources[currentIndex + 1].src;
-                
+
                 // Update video element to use this source
                 if (videoRef.current) {
                   videoRef.current.src = nextSource;
@@ -254,34 +256,34 @@ export const ShowcaseSection = () => {
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0; // Reset to beginning
-      
+
       // Force reload of video element to avoid issues with source switching
       videoRef.current.load();
     }
-    
+
     setIsPlaying(false);
     setIsVideoLoading(true);
     setHasVideoError(false);
-    
+
     // Verify if any of the video sources are playable
-    checkVideoPlayability().then(canPlay => {
+    checkVideoPlayability().then((canPlay) => {
       if (!canPlay) {
-        console.warn('None of the video sources are playable for this project');
+        console.warn("None of the video sources are playable for this project");
         setHasVideoError(true);
       }
     });
   }, [activeProject]);
-  
+
   // Preload videos for adjacent projects for better UX
   useEffect(() => {
     // Find current project index
-    const currentIndex = projects.findIndex(p => p.id === activeProject.id);
-    
+    const currentIndex = projects.findIndex((p) => p.id === activeProject.id);
+
     // Preload next project if exists
     if (currentIndex < projects.length - 1) {
       preloadProjectVideo(projects[currentIndex + 1]);
     }
-    
+
     // Preload previous project if exists
     if (currentIndex > 0) {
       preloadProjectVideo(projects[currentIndex - 1]);
@@ -572,8 +574,9 @@ export const ShowcaseSection = () => {
             {projects.map((project, index) => {
               // Check if this project is verified in our cache
               const firstSource = project.videoSources[0]?.src;
-              const hasVerifiedVideo = firstSource && videoCache[firstSource] === true;
-              
+              const hasVerifiedVideo =
+                firstSource && videoCache[firstSource] === true;
+
               return (
                 <motion.div
                   key={project.id}
@@ -592,18 +595,22 @@ export const ShowcaseSection = () => {
                     <p className="text-primary text-xs font-orbitron font-semibold mb-1">
                       {project.category}
                     </p>
-                    
+
                     {/* Video status indicator */}
                     {videoCache[firstSource] !== undefined && (
-                      <span 
+                      <span
                         className={`w-2 h-2 rounded-full mt-1 ${
-                          hasVerifiedVideo ? 'bg-green-500' : 'bg-red-500'
+                          hasVerifiedVideo ? "bg-green-500" : "bg-red-500"
                         }`}
-                        title={hasVerifiedVideo ? 'Video available' : 'Video unavailable'}
+                        title={
+                          hasVerifiedVideo
+                            ? "Video available"
+                            : "Video unavailable"
+                        }
                       ></span>
                     )}
                   </div>
-                  
+
                   <h4 className="font-orbitron font-bold text-foreground">
                     {project.title}
                   </h4>
