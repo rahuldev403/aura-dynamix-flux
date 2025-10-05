@@ -56,11 +56,11 @@ export const Footer = () => {
             <div className="space-y-3 text-sm text-foreground/60 font-inter">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-primary mt-0.5" />
-                <span>123 Innovation Drive, Tech Valley, CA 94025</span>
+                <span>Benglore , Karntaka </span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary" />
-                <span>+1 (555) 123-4567</span>
+                <span>+91 8753282323</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
